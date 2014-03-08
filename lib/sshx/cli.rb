@@ -8,28 +8,27 @@ module Sshx
 			@@home_directory = File.expand_path('~')
 			@@namespace_separator = '.'
 			@@enable_alias = true
-			@@ssh_path = '/usr/bin/ssh'
+			@@ssh_path = `which ssh`
 			@@temporary_config_path = '/tmp/sshx_config'
 			def start(args = ARGV)
 
 				if !init()
 					exit 1
 				end
-				
+
 				load_config()
 
 				if args.length == 0
 					puts 'sshx is just a wrapper of ssh.'
-					puts `ssh`
+					puts `#{@@ssh_path}`
 				return
 				end
 
-				config_file_path = '/tmp/sshx_config'
-				make_temporary_config(config_file_path)
+				make_temporary_config()
 
 				if args.length == 2 && args[0] == 'init' && args[1] == '-'
-					puts make_commands(config_file_path).join("\n")
-					File.unlink(config_file_path)
+					puts make_commands().join("\n")
+					remove_temporary_config()
 				return
 				end
 
@@ -38,10 +37,10 @@ module Sshx
 					shell_args.push(arg.shellescape)
 				}
 
-				system('ssh ' + shell_args.join(' ') + ' -F ' + config_file_path)
+				system(@@ssh_path + ' ' + shell_args.join(' ') + ' -F ' + @@temporary_config_path)
 				status = $?.exitstatus
 
-				File.unlink(config_file_path)
+					remove_temporary_config()
 
 				exit status
 
@@ -75,7 +74,7 @@ module Sshx
 				File.open(@@home_directory + '/.sshx/config', 'w'){|file|
 					file.puts('NamespaceSeparator ' + @@namespace_separator)
 					file.puts('EnableAlias ' + (@@enable_alias?'true':'false'))
-					file.puts('SshPath ' + `which ssh`)
+					file.puts('SshPath ' + @@ssh_path)
 					file.puts('TemporaryConfig ' + @@temporary_config_path)
 				}
 
@@ -132,7 +131,7 @@ module Sshx
 					@@ssh_path = matches[0][0]
 					next
 					end
-					
+
 					matches = line.scan(/TemporaryConfigPath\s+([^\s]*)/i)
 					if matches.length > 0
 					@@temporary_config_path = matches[0][0]
@@ -141,10 +140,10 @@ module Sshx
 
 				end
 				file.close
-				
+
 			end
 
-			def make_temporary_config(target_path)
+			def make_temporary_config()
 
 				@@home_directory = File.expand_path('~')
 
@@ -155,10 +154,13 @@ module Sshx
 					next
 					end
 
+					if /^config$/i =~ file_path
+					next
+					end
+
 					file = open(@@home_directory + '/.sshx/' + file_path)
 
 					namespace = nil
-					separator = '.'
 
 					while line = file.gets
 
@@ -169,7 +171,7 @@ module Sshx
 						end
 
 						if namespace
-							line = line.gsub(/(Host\s+)([^\s]+)/i, '\1' + namespace + separator + '\2')
+							line = line.gsub(/(Host\s+)([^\s]+)/i, '\1' + namespace + @@namespace_separator + '\2')
 						end
 
 						configs.push(line)
@@ -180,17 +182,23 @@ module Sshx
 
 				}
 
-				file = open(target_path, 'w')
+				file = open(@@temporary_config_path, 'w')
 				file.write(configs.join("\n"))
 				file.close
 
 			end
 
-			def get_hosts(config_path)
+			def remove_temporary_config()
+
+				File.unlink(@@temporary_config_path)
+
+			end
+
+			def get_hosts()
 
 				hosts = []
 
-				open(config_path) {|file|
+				open(@@temporary_config_path) {|file|
 					while line = file.gets
 						matches = line.scan(/Host\s+([^\s]+)/i)
 						if matches.length == 0
@@ -204,13 +212,15 @@ module Sshx
 
 			end
 
-			def make_commands(config_path)
+			def make_commands()
 
 				commands = []
 
-				hosts = get_hosts(config_path)
+				hosts = get_hosts(@@temporary_config_path)
 				commands.concat(make_complete_commands(hosts))
-				commands.concat(make_alias_commands())
+				if @@enable_alias
+					commands.concat(make_alias_commands())
+				end
 
 				return commands
 
