@@ -6,6 +6,7 @@ Gem::Specification.new do |s|
   s.version           = Sshx::VERSION
   s.summary           = 'Extended ssh command'
   s.files             = `git ls-files`.split("\n")
+  s.executables       = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.authors           = ['katty0324']
   s.email             = 'kataoka@sirok.co.jp'
   s.homepage          = 'https://github.com/katty0324/sshx'

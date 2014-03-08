@@ -71,7 +71,6 @@ module Sshx
 				bashrc_path = nil
 				initial_commands = []
 				initial_commands.push('# Initialize sshx')
-				initial_commands.push('alias sshx=' + current_command)
 				initial_commands.push('eval "$(sshx init -)"')
 				initial_command = initial_commands.join("\n")
 
