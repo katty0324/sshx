@@ -6,7 +6,7 @@ module Sshx
 		class << self
 			def start(args = ARGV)
 
-				Cli.init
+				init
 
 				if args.length == 0
 					puts 'sshx is just a wrapper of ssh.'
@@ -15,8 +15,13 @@ module Sshx
 				end
 
 				config_file_path = '/tmp/sshx_config'
-				Cli.make_temporary_config(config_file_path)
-				puts Cli.config_completion(config_file_path)
+				make_temporary_config(config_file_path)
+
+				if args.length == 2 && args[0] == 'init' && args[1] == '-'
+					puts make_commands(config_file_path).join("\n")
+					File.unlink(config_file_path)
+				return
+				end
 
 				shell_args = []
 				args.each{|arg|
@@ -63,7 +68,7 @@ module Sshx
 
 			end
 
-			def config_completion(config_path)
+			def get_hosts(config_path)
 
 				hosts = []
 
@@ -71,16 +76,50 @@ module Sshx
 					while line = file.gets
 						matches = line.scan(/Host\s+([^\s]+)/i)
 						if matches.length == 0
-							next
+						next
 						end
 						hosts.push(matches[0][0])
 					end
 				}
-				
-				return 'complete -W "' + hosts.join(' ') + '" sshx'
+
+				return hosts
 
 			end
-			
+
+			def make_commands(config_path)
+
+				commands = []
+
+				hosts = get_hosts(config_path)
+				commands.concat(make_complete_commands(hosts))
+				commands.concat(make_alias_commands())
+
+				return commands
+
+			end
+
+			def make_complete_commands(hosts)
+
+				commands = [];
+
+				commands.push('_sshx(){ COMPREPLY=($(compgen -W "' + hosts.join(' ') + '" ${COMP_WORDS[COMP_CWORD]})) ; }')
+				commands.push('complete -F _sshx sshx')
+
+				return commands
+
+			end
+
+			def make_alias_commands()
+
+				commands = [];
+
+				commands.push('alias ssh=sshx')
+				commands.push('complete -F _sshx ssh')
+
+				return commands
+
+			end
+
 		end
 	end
 end
