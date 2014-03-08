@@ -64,7 +64,7 @@ module Sshx
 				puts 'Import ssh config file...'
 
 				Dir.mkdir(home_directory + '/.sshx')
-				FileUtils.cp(home_directory + '/.ssh/config', home_directory + '/.sshx/ssh_config')
+				FileUtils.symlink(home_directory + '/.ssh/config', home_directory + '/.sshx/ssh_config')
 
 				puts 'Edit .bashrc file...'
 
