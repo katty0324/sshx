@@ -65,6 +65,15 @@ module Sshx
 
 				Dir.mkdir(home_directory + '/.sshx')
 				FileUtils.symlink(home_directory + '/.ssh/config', home_directory + '/.sshx/ssh_config')
+				
+				puts 'Make config file...'
+				
+				File.open(home_directory + '/.sshx/config', 'w'){|file|
+					file.puts('Separator .')
+					file.puts('Alias true')
+					file.puts('Ssh ' + `which ssh`)
+					file.puts('TemporaryConfig /tmp/ssh_config')
+				}
 
 				puts 'Edit .bashrc file...'
 
