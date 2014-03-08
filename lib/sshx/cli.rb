@@ -16,14 +16,14 @@ module Sshx
 
 				config_file_path = '/tmp/sshx_config'
 				Cli.make_temporary_config(config_file_path)
+				puts Cli.config_completion(config_file_path)
 
-				command = 'ssh'
+				shell_args = []
 				args.each{|arg|
-					command << ' ' + arg.shellescape
+					shell_args.push(arg.shellescape)
 				}
-				command << ' -F ' + config_file_path
 
-				system(command)
+				system('ssh ' + shell_args.join(' ') + ' -F ' + config_file_path)
 				status = $?.exitstatus
 
 				File.unlink(config_file_path)
@@ -47,22 +47,40 @@ module Sshx
 
 				home_directory = File.expand_path('~')
 
-				config = ''
+				configs = []
 				Dir::foreach(home_directory + '/.sshx/') {|file_path|
 					if /^\./ =~ file_path
 					next
 					end
 					file = open(home_directory + '/.sshx/' + file_path)
-					config << file.read + "\n"
+					configs.push(file.read)
 					file.close
 				}
 
 				file = open(target_path, 'w')
-				file.write(config)
+				file.write(configs.join("\n"))
 				file.close
 
 			end
 
+			def config_completion(config_path)
+
+				hosts = []
+
+				open(config_path) {|file|
+					while line = file.gets
+						matches = line.scan(/Host\s+([^\s]+)/i)
+						if matches.length == 0
+							next
+						end
+						hosts.push(matches[0][0])
+					end
+				}
+				
+				return 'complete -W "' + hosts.join(' ') + '" sshx'
+
+			end
+			
 		end
 	end
 end
