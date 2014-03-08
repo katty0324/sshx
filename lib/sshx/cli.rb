@@ -75,7 +75,7 @@ module Sshx
 					file.puts('NamespaceSeparator ' + @@namespace_separator)
 					file.puts('EnableAlias ' + (@@enable_alias?'true':'false'))
 					file.puts('SshPath ' + @@ssh_path)
-					file.puts('TemporaryConfig ' + @@temporary_config_path)
+					file.puts('TemporaryConfigPath ' + @@temporary_config_path)
 				}
 
 				puts 'Edit .bashrc file...'
@@ -216,7 +216,7 @@ module Sshx
 
 				commands = []
 
-				hosts = get_hosts(@@temporary_config_path)
+				hosts = get_hosts()
 				commands.concat(make_complete_commands(hosts))
 				if @@enable_alias
 					commands.concat(make_alias_commands())
