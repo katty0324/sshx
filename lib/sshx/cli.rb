@@ -11,14 +11,16 @@ module Sshx
 				if args.length == 0 then
 					puts 'sshx is just a wrapper of ssh.'
 					puts `ssh`
-				return;
+				return
 				end
 
 				command = 'ssh'
 				args.each{|arg|
 					command << ' ' + arg.shellescape
 				}
-				puts `#{command}`
+				
+				system(command)
+				exit $?.exitstatus
 
 			end
 
