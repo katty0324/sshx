@@ -5,6 +5,7 @@ module Sshx
 	module Cli
 		class << self
 
+			@@home_directory = File.expand_path('~')
 			@@namespace_separator = '.'
 			@@enable_alias = true
 			@@ssh_path = '/usr/bin/ssh'
@@ -14,6 +15,8 @@ module Sshx
 				if !init()
 					exit 1
 				end
+				
+				load_config()
 
 				if args.length == 0
 					puts 'sshx is just a wrapper of ssh.'
@@ -46,9 +49,7 @@ module Sshx
 
 			def init()
 
-				home_directory = File.expand_path('~')
-
-				if File.exist?(home_directory + '/.sshx')
+				if File.exist?(@@home_directory + '/.sshx')
 				return true
 				end
 
@@ -66,12 +67,12 @@ module Sshx
 
 				puts 'Import ssh config file...'
 
-				Dir.mkdir(home_directory + '/.sshx')
-				FileUtils.symlink(home_directory + '/.ssh/config', home_directory + '/.sshx/ssh_config')
+				Dir.mkdir(@@home_directory + '/.sshx')
+				FileUtils.symlink(@@home_directory + '/.ssh/config', @@home_directory + '/.sshx/ssh_config')
 
 				puts 'Make config file...'
 
-				File.open(home_directory + '/.sshx/config', 'w'){|file|
+				File.open(@@home_directory + '/.sshx/config', 'w'){|file|
 					file.puts('NamespaceSeparator ' + @@namespace_separator)
 					file.puts('EnableAlias ' + (@@enable_alias?'true':'false'))
 					file.puts('SshPath ' + `which ssh`)
@@ -86,10 +87,10 @@ module Sshx
 				initial_commands.push('eval "$(sshx init -)"')
 				initial_command = initial_commands.join("\n")
 
-				if File.exist?(home_directory + '/.bashrc')
-					bashrc_path = home_directory + '/.bashrc'
-				elsif File.exist?(home_directory + '/.bash_profile')
-					bashrc_path = home_directory + '/.bash_profile'
+				if File.exist?(@@home_directory + '/.bashrc')
+					bashrc_path = @@home_directory + '/.bashrc'
+				elsif File.exist?(@@home_directory + '/.bash_profile')
+					bashrc_path = @@home_directory + '/.bash_profile'
 				else
 					puts "\e[33m[ERROR] Failed to find ~/.bashrc or ~/.bash_profile. The following command should be run at the begining of shell.\e[0m"
 					puts ''
@@ -109,25 +110,59 @@ module Sshx
 
 			end
 
+			def load_config()
+
+				file = open(@@home_directory + '/.sshx/config')
+				while line = file.gets
+
+					matches = line.scan(/NamespaceSeparator\s+([^\s]*)/i)
+					if matches.length > 0
+					@@namespace_separator = matches[0][0]
+					next
+					end
+
+					matches = line.scan(/EnableAlias\s+([^\s]*)/i)
+					if matches.length > 0
+					@@enable_alias = (matches[0][0] =~ /true$/i ? true : false)
+					next
+					end
+
+					matches = line.scan(/SshPath\s+([^\s]*)/i)
+					if matches.length > 0
+					@@ssh_path = matches[0][0]
+					next
+					end
+					
+					matches = line.scan(/TemporaryConfigPath\s+([^\s]*)/i)
+					if matches.length > 0
+					@@temporary_config_path = matches[0][0]
+					next
+					end
+
+				end
+				file.close
+				
+			end
+
 			def make_temporary_config(target_path)
 
-				home_directory = File.expand_path('~')
+				@@home_directory = File.expand_path('~')
 
 				configs = []
-				Dir::foreach(home_directory + '/.sshx/') {|file_path|
+				Dir::foreach(@@home_directory + '/.sshx/') {|file_path|
 
 					if /^\./ =~ file_path
 					next
 					end
 
-					file = open(home_directory + '/.sshx/' + file_path)
+					file = open(@@home_directory + '/.sshx/' + file_path)
 
 					namespace = nil
 					separator = '.'
 
 					while line = file.gets
 
-						matches = line.scan(/NameSpace\s+([^\s]+)/i)
+						matches = line.scan(/Namespace\s+([^\s]+)/i)
 						if matches.length > 0
 						namespace = matches[0][0]
 						next

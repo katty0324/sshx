@@ -26,7 +26,7 @@ The album and blog are configuration files for sshx.
 Syntax of sshx configuration files is the superset of ssh. It supports namespace additionally.
 
 ```
-NameSpace blog
+Namespace blog
 
 Host prd.web
   HostName blog.katty.in
