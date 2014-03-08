@@ -1,6 +1,9 @@
+$:.push File.expand_path("../lib", __FILE__)
+require 'sshx/version'
+
 Gem::Specification.new do |s|
   s.name              = 'sshx'
-  s.version           = '0.0.0'
+  s.version           = Sshx::VERSION
   s.summary           = 'Extended ssh command'
   s.files             = `git ls-files`.split("\n")
   s.authors           = ['katty0324']
