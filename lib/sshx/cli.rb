@@ -6,7 +6,9 @@ module Sshx
 		class << self
 			def start(args = ARGV)
 
-				init
+				if !init()
+					exit 1
+				end
 
 				if args.length == 0
 					puts 'sshx is just a wrapper of ssh.'
@@ -40,11 +42,44 @@ module Sshx
 			def init()
 
 				home_directory = File.expand_path('~')
-
-				if !File.exist?(home_directory + '/.sshx')
-					Dir.mkdir(home_directory + '/.sshx')
-					FileUtils.cp(home_directory + '/.ssh/config', home_directory + '/.sshx/ssh_config')
+				
+				if File.exist?(home_directory + '/.sshx')
+				return true
 				end
+
+				puts "\e[36mWelcome to sshx!\e[0m"
+				puts 'Initialize sshx...'
+
+				puts 'Import ssh config file...'
+
+				Dir.mkdir(home_directory + '/.sshx')
+				FileUtils.cp(home_directory + '/.ssh/config', home_directory + '/.sshx/ssh_config')
+
+				puts 'Edit .bashrc file...'
+
+				bashrc_path = nil
+				initial_command = ['# Initialize sshx','eval "$(sshx init -)"'].join("\n")
+
+				if File.exist?(home_directory + '/.bashrc')
+					bashrc_path = home_directory + '/.bashrc'
+				elsif File.exist?(home_directory + '/.bash_profile')
+					bashrc_path = home_directory + '/.bash_profile'
+				else
+					puts "\e[33m[ERROR] Failed to find ~/.bashrc or ~/.bash_profile. The following command should be run at the begining of shell.\e[0m"
+					puts ''
+					puts initial_command
+					puts ''
+				return false
+				end
+
+				File.open(bashrc_path, 'a'){|file|
+					file.puts(initial_command)
+				}
+
+				puts 'Successfully initialized.'
+				puts ''
+
+				return true
 
 			end
 
