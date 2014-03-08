@@ -48,7 +48,7 @@ module Sshx
 				if File.exist?(home_directory + '/.sshx')
 				return true
 				end
-				
+
 				puts "\e[36m"
 				puts ' ------------------------- '
 				puts '   ####  #### #   # #   #  '
@@ -104,12 +104,34 @@ module Sshx
 
 				configs = []
 				Dir::foreach(home_directory + '/.sshx/') {|file_path|
+
 					if /^\./ =~ file_path
 					next
 					end
+
 					file = open(home_directory + '/.sshx/' + file_path)
-					configs.push(file.read)
+
+					namespace = nil
+					separator = '.'
+
+					while line = file.gets
+
+						matches = line.scan(/NameSpace\s+([^\s]+)/i)
+						if matches.length > 0
+						namespace = matches[0][0]
+						next
+						end
+
+						if namespace
+							line = line.gsub(/(Host\s+)([^\s]+)/i, '\1' + namespace + separator + '\2')
+						end
+
+						configs.push(line)
+
+					end
+
 					file.close
+
 				}
 
 				file = open(target_path, 'w')
