@@ -4,11 +4,14 @@ require 'shellwords'
 module Sshx
 	module Cli
 		class << self
-			def start(current_command = $0, args = ARGV)
 
-				current_command = File.expand_path(current_command)
+			@@namespace_separator = '.'
+			@@enable_alias = true
+			@@ssh_path = '/usr/bin/ssh'
+			@@temporary_config_path = '/tmp/sshx_config'
+			def start(args = ARGV)
 
-				if !init(current_command)
+				if !init()
 					exit 1
 				end
 
@@ -41,7 +44,7 @@ module Sshx
 
 			end
 
-			def init(current_command)
+			def init()
 
 				home_directory = File.expand_path('~')
 
@@ -65,14 +68,14 @@ module Sshx
 
 				Dir.mkdir(home_directory + '/.sshx')
 				FileUtils.symlink(home_directory + '/.ssh/config', home_directory + '/.sshx/ssh_config')
-				
+
 				puts 'Make config file...'
-				
+
 				File.open(home_directory + '/.sshx/config', 'w'){|file|
-					file.puts('Separator .')
-					file.puts('Alias true')
-					file.puts('Ssh ' + `which ssh`)
-					file.puts('TemporaryConfig /tmp/ssh_config')
+					file.puts('NamespaceSeparator ' + @@namespace_separator)
+					file.puts('EnableAlias ' + (@@enable_alias?'true':'false'))
+					file.puts('SshPath ' + `which ssh`)
+					file.puts('TemporaryConfig ' + @@temporary_config_path)
 				}
 
 				puts 'Edit .bashrc file...'
