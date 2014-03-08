@@ -4,9 +4,11 @@ require 'shellwords'
 module Sshx
 	module Cli
 		class << self
-			def start(args = ARGV)
+			def start(current_command = $0, args = ARGV)
 
-				if !init()
+				current_command = File.expand_path(current_command)
+
+				if !init(current_command)
 					exit 1
 				end
 
@@ -39,15 +41,24 @@ module Sshx
 
 			end
 
-			def init()
+			def init(current_command)
 
 				home_directory = File.expand_path('~')
-				
+
 				if File.exist?(home_directory + '/.sshx')
 				return true
 				end
-
-				puts "\e[36mWelcome to sshx!\e[0m"
+				
+				puts "\e[36m"
+				puts ' ------------------------- '
+				puts '   ####  #### #   # #   #  '
+				puts '  #     #     #   #  # #   '
+				puts '   ###   ###  #####   #    '
+				puts '      #     # #   #  # #   '
+				puts '  ####  ####  #   # #   #  '
+				puts ' ------------------------- '
+				puts '     Welcome to sshx!      '
+				puts "\e[0m"
 				puts 'Initialize sshx...'
 
 				puts 'Import ssh config file...'
@@ -58,7 +69,11 @@ module Sshx
 				puts 'Edit .bashrc file...'
 
 				bashrc_path = nil
-				initial_command = ['# Initialize sshx','eval "$(sshx init -)"'].join("\n")
+				initial_commands = []
+				initial_commands.push('# Initialize sshx')
+				initial_commands.push('alias sshx=' + current_command)
+				initial_commands.push('eval "$(sshx init -)"')
+				initial_command = initial_commands.join("\n")
 
 				if File.exist?(home_directory + '/.bashrc')
 					bashrc_path = home_directory + '/.bashrc'
