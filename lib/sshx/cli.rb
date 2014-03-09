@@ -31,15 +31,47 @@ module Sshx
 				return
 				end
 
-				shell_args = []
-				args.each{|arg|
-					shell_args.push(arg.shellescape)
+				commands = []
+				hostname_arg = get_hostname_in_args(args)
+				hostnames = hostname_arg.split(/\s*,\s*/)
+				hostnames.each{|hostname|
+					shell_args = []
+					args.each{|arg|
+						if arg == hostname_arg
+						shell_args.push(hostname.shellescape)
+						next
+						end
+						shell_args.push(arg.shellescape)
+					}
+					commands.push(@@ssh_path + ' ' + shell_args.join(' '))
 				}
 
-				system(@@ssh_path + ' ' + shell_args.join(' '))
-				status = $?.exitstatus
+				if commands.length == 1
+					system(commands[0])
+					status = $?.exitstatus
+					exit status
+				else
+					system('tmux')
+					# TODO implement
+				end
 
-				exit status
+			end
+
+			def get_hostname_in_args(args)
+
+				is_option_parameter = false
+
+				args.each{|arg|
+					if /^-/ =~ arg
+					is_option_parameter = true
+					next
+					elsif is_option_parameter
+					is_option_parameter = false
+					next
+					else
+					return arg
+					end
+				}
 
 			end
 
