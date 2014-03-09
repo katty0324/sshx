@@ -48,12 +48,12 @@ module Sshx
 
 				if commands.length == 1
 					system(commands[0])
-					status = $?.exitstatus
-					exit status
 				else
-					system('tmux')
-					# TODO implement
+					run_tmux(commands)
 				end
+				
+				status = $?.exitstatus
+				exit status
 
 			end
 
@@ -279,6 +279,23 @@ module Sshx
 
 				return commands
 
+			end
+
+			def run_tmux(commands)
+
+				tmux_path = `which tmux`
+				if $?.exitstatus > 0
+					puts '[ERROR] tmux must be installed to use multi host connection. Install tmux from the following url. http://tmux.sourceforge.net/'
+					exit 1
+				end
+				
+				commands.each{|command|
+					puts command
+				}
+				
+				system('tmux')
+				# TODO implement
+				
 			end
 
 		end
