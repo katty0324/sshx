@@ -9,7 +9,8 @@ module Sshx
 			@@namespace_separator = '.'
 			@@enable_alias = true
 			@@ssh_path = `which ssh`
-			@@temporary_config_path = '/tmp/sshx_config'
+			@@ssh_config_path = @@home_directory + '/.ssh/config'
+			@@sshx_config_path = @@home_directory + '/.sshx/config'
 			def start(args = ARGV)
 
 				if !init()
@@ -24,11 +25,10 @@ module Sshx
 				return
 				end
 
-				make_temporary_config()
+				make_ssh_config()
 
 				if args.length == 2 && args[0] == 'init' && args[1] == '-'
 					puts make_commands().join("\n")
-					remove_temporary_config()
 				return
 				end
 
@@ -37,10 +37,8 @@ module Sshx
 					shell_args.push(arg.shellescape)
 				}
 
-				system(@@ssh_path + ' ' + shell_args.join(' ') + ' -F ' + @@temporary_config_path)
+				system(@@ssh_path + ' ' + shell_args.join(' '))
 				status = $?.exitstatus
-
-					remove_temporary_config()
 
 				exit status
 
@@ -67,7 +65,7 @@ module Sshx
 				puts 'Import ssh config file...'
 
 				Dir.mkdir(@@home_directory + '/.sshx')
-				FileUtils.symlink(@@home_directory + '/.ssh/config', @@home_directory + '/.sshx/ssh_config')
+				FileUtils.cp(@@home_directory + '/.ssh/config', @@home_directory + '/.sshx/ssh_config')
 
 				puts 'Make config file...'
 
@@ -75,7 +73,6 @@ module Sshx
 					file.puts('NamespaceSeparator ' + @@namespace_separator)
 					file.puts('EnableAlias ' + (@@enable_alias?'true':'false'))
 					file.puts('SshPath ' + @@ssh_path)
-					file.puts('TemporaryConfigPath ' + @@temporary_config_path)
 				}
 
 				puts 'Edit .bashrc file...'
@@ -114,6 +111,8 @@ module Sshx
 				file = open(@@home_directory + '/.sshx/config')
 				while line = file.gets
 
+					line = line.chomp
+
 					matches = line.scan(/NamespaceSeparator\s+([^\s]*)/i)
 					if matches.length > 0
 					@@namespace_separator = matches[0][0]
@@ -132,18 +131,12 @@ module Sshx
 					next
 					end
 
-					matches = line.scan(/TemporaryConfigPath\s+([^\s]*)/i)
-					if matches.length > 0
-					@@temporary_config_path = matches[0][0]
-					next
-					end
-
 				end
 				file.close
 
 			end
 
-			def make_temporary_config()
+			def make_ssh_config()
 
 				@@home_directory = File.expand_path('~')
 
@@ -164,6 +157,8 @@ module Sshx
 
 					while line = file.gets
 
+						line = line.chomp
+
 						matches = line.scan(/Namespace\s+([^\s]+)/i)
 						if matches.length > 0
 						namespace = matches[0][0]
@@ -182,15 +177,9 @@ module Sshx
 
 				}
 
-				file = open(@@temporary_config_path, 'w')
+				file = open(@@ssh_config_path, 'w')
 				file.write(configs.join("\n"))
 				file.close
-
-			end
-
-			def remove_temporary_config()
-
-				File.unlink(@@temporary_config_path)
 
 			end
 
@@ -198,13 +187,18 @@ module Sshx
 
 				hosts = []
 
-				open(@@temporary_config_path) {|file|
+				open(@@ssh_config_path) {|file|
 					while line = file.gets
+
+						line = line.chomp
+
 						matches = line.scan(/Host\s+([^\s]+)/i)
 						if matches.length == 0
 						next
 						end
+
 						hosts.push(matches[0][0])
+
 					end
 				}
 
