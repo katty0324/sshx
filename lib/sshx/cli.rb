@@ -34,6 +34,7 @@ module Sshx
 				commands = []
 				hostname_arg = get_hostname_in_args(args)
 				hostnames = hostname_arg.split(/\s*,\s*/)
+				ssh_command = hostnames.length >= 2 ? $0 : @@ssh_path
 				hostnames.each{|hostname|
 					shell_args = []
 					args.each{|arg|
@@ -43,7 +44,7 @@ module Sshx
 						end
 						shell_args.push(arg.shellescape)
 					}
-					commands.push(@@ssh_path + ' ' + shell_args.join(' '))
+					commands.push(ssh_command + ' ' + shell_args.join(' '))
 				}
 
 				if commands.length == 1
