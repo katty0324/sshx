@@ -29,6 +29,16 @@ album       blog        config      ssh_config
 
 The config file is configuration files for sshx. The album, blog and ssh_config (It's imported from ~/.ssh/config) are configuration for ssh.
 
+## Multi hosts connection with tmux
+
+You can connect to some hosts with [tmux](http://tmux.sourceforge.net/).
+
+```bash
+sshx blog.prd.web1,blog.prd.web2,blog.prd.web3
+```
+
+tmux must be installed if you use multi hosts connection. 
+
 ## Namespace
 
 Syntax of sshx configuration files is the superset of ssh. It supports namespace additionally.
