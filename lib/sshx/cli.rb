@@ -290,23 +290,21 @@ module Sshx
 				end
 
 				window_name = 'sshx-window'
-				session_name = 'sshx-session'
+				session_name = 'sshx-session-' + Time.now.to_i.to_s + Time.now.usec.to_s
 				layout = 'tiled'
 
 				`tmux start-server`
 				`tmux new-session -d -n #{window_name} -s #{session_name}`
 
-				commands.each{|command|
-					`tmux split-window -v -t #{window_name}`
+				commands.each_with_index { |command, index|
+					if index > 0
+						`tmux split-window -v -t #{window_name}`
+					end
 					escaped_command = command.shellescape
 					`tmux send-keys #{escaped_command} C-m`
 					`tmux select-layout -t #{window_name} #{layout}`
 				}
 
-				`tmux kill-pane -t 0`
-				`tmux select-window -t #{window_name}`
-				`tmux select-pane -t 0`
-				`tmux select-layout -t #{window_name} #{layout}`
 				`tmux set-window-option synchronize-panes on`
 				`tmux attach-session -t #{session_name}`
 
