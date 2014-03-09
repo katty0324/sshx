@@ -51,7 +51,7 @@ module Sshx
 				else
 					run_tmux(commands)
 				end
-				
+
 				status = $?.exitstatus
 				exit status
 
@@ -288,14 +288,28 @@ module Sshx
 					puts '[ERROR] tmux must be installed to use multi host connection. Install tmux from the following url. http://tmux.sourceforge.net/'
 					exit 1
 				end
-				
+
+				window_name = 'sshx-window'
+				session_name = 'sshx-session'
+				layout = 'main-horizontal'
+
+				`tmux start-server`
+				`tmux new-session -d -n #{window_name} -s #{session_name}`
+
 				commands.each{|command|
-					puts command
+					`tmux split-window -v -t #{window_name}`
+					escaped_command = command.shellescape
+					`tmux send-keys #{escaped_command} C-m`
+					`tmux select-layout -t #{window_name} #{layout}`
 				}
-				
-				system('tmux')
-				# TODO implement
-				
+
+				`tmux kill-pane -t 0`
+				`tmux select-window -t #{window_name}`
+				`tmux select-pane -t 0`
+				`tmux select-layout -t #{window_name} #{layout}`
+				`tmux set-window-option synchronize-panes on`
+				`tmux attach-session -t #{session_name}`
+
 			end
 
 		end
