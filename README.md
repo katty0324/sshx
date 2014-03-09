@@ -2,6 +2,14 @@
 
 Extended ssh command to use multi ssh_config, namespace and command completion.
 
+## Installation
+
+You can install sshx from RubyGems.
+
+```bash
+gem install sshx
+```
+
 ## Usage
 
 You can use the sshx in the same way as ssh command because sshx is just a wrapper of ssh.
@@ -16,10 +24,10 @@ While ssh has only one configuration file .ssh/config, sshx can have multi confi
 
 ```bash
 $ ls ~/.sshx/
-album	blog	config
+album       blog        config      ssh_config
 ```
 
-The album and blog are configuration files for sshx.
+The config file is configuration files for sshx. The album, blog and ssh_config (It's imported from ~/.ssh/config) are configuration for ssh.
 
 ## Namespace
 
