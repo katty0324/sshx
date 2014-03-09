@@ -291,7 +291,7 @@ module Sshx
 
 				window_name = 'sshx-window'
 				session_name = 'sshx-session'
-				layout = 'main-horizontal'
+				layout = 'tiled'
 
 				`tmux start-server`
 				`tmux new-session -d -n #{window_name} -s #{session_name}`
