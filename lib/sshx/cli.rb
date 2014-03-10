@@ -264,7 +264,7 @@ module Sshx
 
 				commands = [];
 
-				commands.push('_sshx(){ COMPREPLY=($(compgen -W "' + hosts.join(' ') + '" ${COMP_WORDS[COMP_CWORD]})) ; }')
+				commands.push('_sshx(){ COMPREPLY=($(compgen -f -W "' + hosts.join(' ') + '" ${COMP_WORDS[COMP_CWORD]})) ; }')
 				commands.push('complete -F _sshx sshx')
 
 				return commands
